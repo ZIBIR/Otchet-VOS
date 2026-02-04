@@ -3,158 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Учет запчастей</title>
+    <title>Отчет ВОС</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            color: #000;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Заголовок даты и страницы */
-        .header-block {
-            text-align: center;
-            margin-bottom: 20px;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            padding-bottom: 10px;
-            z-index: 10;
-        }
-
-        h2 {
-            margin: 10px 0;
-            font-size: 22px;
-        }
-
-        input[type="date"] {
-            font-size: 18px;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 12px;
-            background: #f9f9f9;
-            font-weight: bold;
-            color: #333;
-            width: 100%;
-            max-width: 300px;
-            text-align: center;
-        }
-
-        /* Общие стили для страниц */
-        .page {
-            display: none; /* Скрыты по умолчанию */
-            animation: fadeIn 0.3s;
-        }
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Список товаров */
-        .item-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            justify-content: space-between;
-        }
-
-        .item-btn {
-            flex-grow: 1;
-            background-color: #f0f0f0;
-            color: #333;
-            border: none;
-            padding: 15px 10px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 800;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-        }
-
-        .item-btn.active {
-            background-color: #007bff;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-        }
-
-        .qty-input {
-            width: 0;
-            opacity: 0;
-            padding: 0;
-            margin-left: 0;
-            border: none;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            background: white;
-            border-bottom: 2px solid #007bff;
-            font-size: 18px;
-            text-align: center;
-            font-weight: bold;
-            color: #333;
-            border-radius: 0;
-            outline: none;
-        }
-
-        .item-row.active .qty-input {
-            width: 70px;
-            opacity: 1;
-            padding: 10px 5px;
-            margin-left: 10px;
-        }
-
-        /* Кнопки навигации */
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 18px;
-            border: none;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .btn-next { background-color: #007bff; color: white; }
-        .btn-back { background-color: #6c757d; color: white; }
-        .btn-send { background-color: #28a745; color: white; }
-        .btn-metal { background-color: #ffc107; color: #333; } /* Слесарка */
-
-        /* Экраны состояния */
-        #loading, #success-screen {
-            display: none;
-            text-align: center;
-            margin-top: 50px;
-        }
-        .checkmark { font-size: 60px; color: #28a745; }
+        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 20px; color: #000; }
+        .header-block { text-align: center; margin-bottom: 20px; position: sticky; top: 0; background: #fff; padding-bottom: 15px; z-index: 10; border-bottom: 1px solid #eee;}
+        h2 { margin: 10px 0; font-size: 20px; }
+        input[type="date"] { font-size: 18px; padding: 12px; border: 2px solid #ddd; border-radius: 12px; background: #f9f9f9; width: 100%; box-sizing: border-box; text-align: center;}
+        .page { display: none; animation: fadeIn 0.3s; padding-bottom: 80px;}
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .item-row { display: flex; align-items: center; margin-bottom: 12px; justify-content: space-between; }
+        .item-btn { flex-grow: 1; background: #f2f2f5; color: #000; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer; transition: 0.2s; }
+        .item-btn.active { background: #3390ec; color: white; }
+        .qty-input { width: 0; opacity: 0; padding: 0; margin: 0; border: none; transition: 0.3s;  border-bottom: 2px solid #3390ec; font-size: 20px; text-align: center; font-weight: bold; border-radius: 0; outline: none; background: transparent;}
+        .item-row.active .qty-input { width: 60px; opacity: 1; margin-left: 10px; padding: 5px; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 16px; border: none; border-radius: 14px; font-size: 17px; font-weight: bold; cursor: pointer; }
+        .btn-next { background: #3390ec; color: white; }
+        .btn-back { background: #eef1f4; color: #000; }
+        .btn-send { background: #34b759; color: white; }
+        .btn-metal { background: #ffcc00; color: #000; margin-bottom: 10px; }
+        #loading, #success-screen, #error-screen { display: none; text-align: center; margin-top: 50px; }
+        .icon-lg { font-size: 60px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <!-- Шапка с датой (общая для всех) -->
     <div class="header-block">
         <input type="date" id="report-date">
     </div>
 
-    <!-- Страница 1: Пришло в ремонт -->
+    <!-- 1. ПРИШЛО -->
     <div id="page-1" class="page active">
         <h2>📥 Пришло в ремонт</h2>
         <div id="list-page-1"></div>
@@ -163,7 +44,7 @@
         </div>
     </div>
 
-    <!-- Страница 2: Выдано -->
+    <!-- 2. ВЫДАНО -->
     <div id="page-2" class="page">
         <h2>📤 Выдано</h2>
         <div id="list-page-2"></div>
@@ -173,9 +54,9 @@
         </div>
     </div>
 
-    <!-- Страница 3: Промежуточная -->
+    <!-- 3. МЕНЮ -->
     <div id="page-3" class="page">
-        <h2>⚙️ Действия</h2>
+        <h2>🏁 Завершение</h2>
         <div class="nav-buttons" style="flex-direction: column;">
             <button class="btn btn-metal" onclick="goToPage(4)">🔧 Добавить слесарку</button>
             <button class="btn btn-send" onclick="sendData()">📤 Отправить отчет</button>
@@ -183,34 +64,40 @@
         </div>
     </div>
 
-    <!-- Страница 4: Слесарка -->
+    <!-- 4. СЛЕСАРКА -->
     <div id="page-4" class="page">
-        <h2>🔧 Слесарка</h2>
+        <h2>🔧 Слесарка (Шины)</h2>
         <div id="list-page-4"></div>
         <div class="nav-buttons">
-            <button class="btn btn-back" onclick="goToPage(3)">Назад</button>
-            <button class="btn btn-send" onclick="sendData()">Отправить отчет</button>
+            <button class="btn btn-back" onclick="goToPage(3)">Готово</button>
         </div>
     </div>
 </div>
 
-<!-- Лоадер и Успех -->
-<div id="loading">⏳ Отправка данных...</div>
+<div id="loading"><div class="icon-lg">⏳</div><h2>Отправка...</h2></div>
+
 <div id="success-screen">
-    <div class="checkmark">✅</div>
-    <h2>Отчет отправлен!</h2>
-    <p>Данные записаны. Сообщение в чате.</p>
-    <button class="btn btn-send" onclick="Telegram.WebApp.close()">Закрыть</button>
+    <div class="icon-lg">✅</div>
+    <h2>Готово!</h2>
+    <p>Данные добавлены в таблицу.</p>
+    <button class="btn btn-back" onclick="Telegram.WebApp.close()">Закрыть</button>
+</div>
+
+<div id="error-screen">
+    <div class="icon-lg">❌</div>
+    <h2>Ошибка</h2>
+    <p id="error-text">Не удалось отправить данные.</p>
+    <button class="btn btn-back" onclick="location.reload()">Попробовать снова</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand(); 
 
-    // !!! ВСТАВЬ СЮДА НОВЫЙ URL СКРИПТА ПОСЛЕ ДЕПЛОЯ !!!
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPPuQ4SnlE4DqRdr3xpIEf7MRE-_Ah2riVUpJIJiy2cgBPxnU1bRhWVTC9NxCjfdhb/exec";
+    // !!! ВАЖНО: ВСТАВЬТЕ СЮДА НОВУЮ ССЫЛКУ ПОСЛЕ ДЕПЛОЯ (NEW VERSION) !!!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTx1AjbFRS0OekI7IgL4jM5MI324-JWbxO2gP-yVE59dpixAAWBWUZyr0W86MaUIgE/exec"; 
 
-    // КОНФИГУРАЦИЯ СТРАНИЦ
+    // Данные для полей
     const CONFIG = {
         1: [
             { key: "in_controller", label: "Контроллер" },
@@ -224,131 +111,109 @@
         ],
         4: [
             { key: "tires_out", label: "Выдано шин" },
-            { key: "tires_left", label: "Шин осталось" }
+            { key: "tires_left", label: "Осталось шин" }
         ]
     };
 
-    // Инициализация
+    // Старт
     const dateInput = document.getElementById('report-date');
-    dateInput.valueAsDate = new Date();
+    dateInput.valueAsDate = new Date(); // Сегодняшняя дата
 
-    // Функция генерации кнопок для конкретной страницы
-    function renderItems(pageId) {
-        const container = document.getElementById(`list-page-${pageId}`);
-        if (!CONFIG[pageId]) return;
-
-        CONFIG[pageId].forEach(item => {
+    function renderItems(pId) {
+        const c = document.getElementById(`list-page-${pId}`);
+        CONFIG[pId].forEach(item => {
             const row = document.createElement('div');
             row.className = 'item-row';
             row.id = `row-${item.key}`;
+            
+            row.innerHTML = `
+                <button class="item-btn" onclick="toggleItem('${item.key}')">${item.label}</button>
+                <input type="number" id="input-${item.key}" class="qty-input" placeholder="#" min="1" enterkeyhint="done">
+            `;
+            c.appendChild(row);
 
-            const btn = document.createElement('button');
-            btn.className = 'item-btn';
-            btn.innerText = item.label;
-            btn.type = "button"; // Чтобы не сабмитил форму случайно
-            btn.onclick = () => toggleItem(item.key);
-
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.className = 'qty-input';
-            input.id = `input-${item.key}`;
-            input.min = "1";
-            input.placeholder = "шт";
-            input.oninput = function() {
-                if(this.value < 1 && this.value !== "") this.value = "";
-            };
-
-            row.appendChild(btn);
-            row.appendChild(input);
-            container.appendChild(row);
+            // Обработка фокуса
+            const inp = row.querySelector('input');
+            inp.addEventListener('blur', () => { if(!inp.value) toggleItem(item.key); });
         });
     }
 
-    // Рендерим списки при запуске
-    renderItems(1);
-    renderItems(2);
-    renderItems(4);
+    // Рендерим все страницы
+    [1, 2, 4].forEach(renderItems);
 
-    // Логика переключения кнопок (Та же, что и была)
     function toggleItem(key) {
         const row = document.getElementById(`row-${key}`);
         const btn = row.querySelector('.item-btn');
-        const input = row.querySelector('.qty-input');
-        
-        const isActive = btn.classList.contains('active');
+        const input = document.getElementById(`input-${key}`);
+        const isActive = row.classList.contains('active');
 
         if (isActive) {
-            btn.classList.remove('active');
             row.classList.remove('active');
+            btn.classList.remove('active');
             input.value = "";
-            if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         } else {
-            btn.classList.add('active');
             row.classList.add('active');
+            btn.classList.add('active');
             input.value = "1";
             input.focus();
-            if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         }
+        if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
     }
 
-    // Навигация между страницами
-    function goToPage(pageNum) {
-        // Скрываем все страницы
-        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-        // Показываем нужную
-        document.getElementById(`page-${pageNum}`).classList.add('active');
-        // Скролл вверх
+    function goToPage(n) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`page-${n}`).classList.add('active');
         window.scrollTo(0,0);
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
     function sendData() {
         const rawDate = dateInput.value;
-        const [year, month, day] = rawDate.split('-');
-        const formattedDate = `${day}.${month}.${year}`;
+        if (!rawDate) { alert("Выберите дату!"); return; }
 
-        const resultItems = {};
-
-        // Собираем данные со ВСЕХ страниц (проходим по всей конфигурации)
-        [1, 2, 4].forEach(pId => {
-            CONFIG[pId].forEach(item => {
-                const input = document.getElementById(`input-${item.key}`);
-                const row = document.getElementById(`row-${item.key}`);
-                if (row && row.classList.contains('active') && input.value) {
-                    resultItems[item.key] = parseInt(input.value);
-                }
+        const [y, m, d] = rawDate.split('-');
+        const fDate = `${d}.${m}.${y}`;
+        
+        const data = {};
+        [1, 2, 4].forEach(p => {
+            CONFIG[p].forEach(i => {
+                const val = document.getElementById(`input-${i.key}`).value;
+                if (val) data[i.key] = parseInt(val);
             });
         });
 
-        // Данные юзера
-        const user = tg.initDataUnsafe.user || { first_name: "TestUser", id: 0 };
-        let fullName = user.first_name;
-        if (user.last_name) fullName += " " + user.last_name;
-        if (user.username) fullName += " (@" + user.username + ")";
+        const user = tg.initDataUnsafe.user || { first_name: "Неизвестный", id: 0 };
+        let uName = user.first_name;
+        if (user.last_name) uName += " " + user.last_name;
+        if (user.username) uName += " (@" + user.username + ")";
 
         const payload = {
-            date: formattedDate,
-            items: resultItems,
-            username: fullName
+            date: fDate,
+            items: data,
+            username: uName
         };
 
-        // UI
         document.getElementById('app').style.display = 'none';
         document.getElementById('loading').style.display = 'block';
 
+        // Отправка
         fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'no-cors', // Важно для GAS
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(() => {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('success-screen').style.display = 'block';
-            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            // В режиме no-cors мы всегда попадаем сюда, даже если скрипт упал.
+            // Но мы добавили обработку ошибок внутри бота (он напишет если что не так)
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('success-screen').style.display = 'block';
+                if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            }, 1000); // Небольшая задержка для красоты
         }).catch(err => {
-            alert("Ошибка сети: " + err);
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
+            document.getElementById('error-screen').style.display = 'block';
+            document.getElementById('error-text').innerText = err;
         });
     }
 </script>
