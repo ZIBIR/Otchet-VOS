@@ -1,191 +1,202 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Отчет ВОС</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 20px; color: #000; }
-        .header-block { text-align: center; margin-bottom: 20px; position: sticky; top: 0; background: #fff; padding-bottom: 15px; z-index: 10; border-bottom: 1px solid #eee;}
-        h2 { margin: 10px 0; font-size: 20px; }
-        input[type="date"] { font-size: 18px; padding: 12px; border: 2px solid #ddd; border-radius: 12px; background: #f9f9f9; width: 100%; box-sizing: border-box; text-align: center;}
-        .page { display: none; animation: fadeIn 0.3s; padding-bottom: 80px;}
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .item-row { display: flex; align-items: center; margin-bottom: 12px; justify-content: space-between; }
-        .item-btn { flex-grow: 1; background: #f2f2f5; color: #000; border: none; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600; text-align: left; cursor: pointer; transition: 0.2s; }
-        .item-btn.active { background: #3390ec; color: white; }
-        .qty-input { width: 0; opacity: 0; padding: 0; margin: 0; border: none; transition: 0.3s;  border-bottom: 2px solid #3390ec; font-size: 20px; text-align: center; font-weight: bold; border-radius: 0; outline: none; background: transparent;}
-        .item-row.active .qty-input { width: 60px; opacity: 1; margin-left: 10px; padding: 5px; }
-        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 16px; border: none; border-radius: 14px; font-size: 17px; font-weight: bold; cursor: pointer; }
-        .btn-next { background: #3390ec; color: white; }
-        .btn-back { background: #eef1f4; color: #000; }
-        .btn-send { background: #34b759; color: white; }
-        .btn-metal { background: #ffcc00; color: #000; margin-bottom: 10px; }
-        #loading, #success-screen, #error-screen { display: none; text-align: center; margin-top: 50px; }
-        .icon-lg { font-size: 60px; margin-bottom: 20px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Отчет ВОС</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+    /* CSS оставим прежним для краткости, он был нормальным */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); margin: 0; padding: 0; }
+    .container { padding: 20px; padding-bottom: 80px; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .date-picker { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; background: var(--tg-theme-secondary-bg-color, #f0f0f0); color: var(--tg-theme-text-color, #000); }
+    .item-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 10px; background: var(--tg-theme-secondary-bg-color, #f5f5f5); border-radius: 12px; transition: 0.2s; }
+    .item-row.active { border: 2px solid var(--tg-theme-button-color, #2481cc); background: var(--tg-theme-bg-color, #fff); }
+    .label { font-size: 16px; font-weight: 500; flex-grow: 1; }
+    .action-btn { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #ddd; color: #555; transition: 0.2s; }
+    .action-btn.active { background: var(--tg-theme-button-color, #2481cc); color: #fff; }
+    input[type="number"] { width: 60px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-size: 16px; display: none; margin-left: 10px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+    .item-row.active input { display: block; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--tg-theme-secondary-bg-color, #eee); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; z-index: 100; }
+    .nav-item { font-size: 12px; display: flex; flex-direction: column; align-items: center; opacity: 0.6; cursor: pointer; }
+    .nav-item.active { opacity: 1; color: var(--tg-theme-button-color, #2481cc); font-weight: bold; }
+    .page { display: none; }
+    .page.active { display: block; }
+    #main-btn { margin-top: 30px; width: 100%; padding: 15px; border: none; background: var(--tg-theme-button-color, #2481cc); color: #fff; font-size: 18px; border-radius: 12px; cursor: pointer; }
+    
+    /* Экраны загрузки и успеха */
+    #loading, #success-screen, #error-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--tg-theme-bg-color, #fff); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--tg-theme-button-color, #3498db); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .success-icon { font-size: 60px; color: #4CAF50; margin-bottom: 20px; }
+    .error-icon { font-size: 60px; color: #F44336; margin-bottom: 20px; }
+</style>
 </head>
 <body>
 
 <div id="app">
-    <div class="header-block">
-        <input type="date" id="report-date">
+    <div class="container">
+        <!-- Ввод даты -->
+        <input type="date" id="date-input" class="date-picker">
+
+        <!-- Стр 1: В ремонт -->
+        <div id="page-1" class="page active">
+            <h2>Пришло в ремонт</h2>
+            <div id="list-1"></div>
+        </div>
+
+        <!-- Стр 2: Выдано -->
+        <div id="page-2" class="page">
+            <h2>Выдано (готовое)</h2>
+            <div id="list-2"></div>
+        </div>
+
+        <!-- Стр 4: Слесарка -->
+        <div id="page-4" class="page">
+            <h2>Слесарка / Шины</h2>
+            <div id="list-4"></div>
+        </div>
+
+        <button id="main-btn" onclick="sendData()">Отправить отчет</button>
     </div>
 
-    <!-- 1. ПРИШЛО -->
-    <div id="page-1" class="page active">
-        <h2>📥 Пришло в ремонт</h2>
-        <div id="list-page-1"></div>
-        <div class="nav-buttons">
-            <button class="btn btn-next" onclick="goToPage(2)">Далее</button>
-        </div>
-    </div>
-
-    <!-- 2. ВЫДАНО -->
-    <div id="page-2" class="page">
-        <h2>📤 Выдано</h2>
-        <div id="list-page-2"></div>
-        <div class="nav-buttons">
-            <button class="btn btn-back" onclick="goToPage(1)">Назад</button>
-            <button class="btn btn-next" onclick="goToPage(3)">Далее</button>
-        </div>
-    </div>
-
-    <!-- 3. МЕНЮ -->
-    <div id="page-3" class="page">
-        <h2>🏁 Завершение</h2>
-        <div class="nav-buttons" style="flex-direction: column;">
-            <button class="btn btn-metal" onclick="goToPage(4)">🔧 Добавить слесарку</button>
-            <button class="btn btn-send" onclick="sendData()">📤 Отправить отчет</button>
-            <button class="btn btn-back" style="margin-top: 10px;" onclick="goToPage(2)">Назад</button>
-        </div>
-    </div>
-
-    <!-- 4. СЛЕСАРКА -->
-    <div id="page-4" class="page">
-        <h2>🔧 Слесарка (Шины)</h2>
-        <div id="list-page-4"></div>
-        <div class="nav-buttons">
-            <button class="btn btn-back" onclick="goToPage(3)">Готово</button>
-        </div>
+    <!-- Навигация -->
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="goToPage(1)" id="nav-1"><span>🛠 В ремонт</span></div>
+        <div class="nav-item" onclick="goToPage(2)" id="nav-2"><span>📦 Выдано</span></div>
+        <div class="nav-item" onclick="goToPage(4)" id="nav-4"><span>⚙️ Слесарка</span></div>
     </div>
 </div>
 
-<div id="loading"><div class="icon-lg">⏳</div><h2>Отправка...</h2></div>
+<!-- Загрузка -->
+<div id="loading">
+    <div class="spinner"></div>
+    <p>Отправка данных...</p>
+</div>
 
+<!-- Успех -->
 <div id="success-screen">
-    <div class="icon-lg">✅</div>
+    <div class="success-icon">✅</div>
     <h2>Готово!</h2>
-    <p>Данные добавлены в таблицу.</p>
-    <button class="btn btn-back" onclick="Telegram.WebApp.close()">Закрыть</button>
+    <p>Данные успешно записаны.</p>
+    <button onclick="tg.close()" style="margin-top:20px; padding:10px 20px; background:var(--tg-theme-button-color); color:#fff; border:none; border-radius:8px;">Закрыть</button>
 </div>
 
+<!-- Ошибка -->
 <div id="error-screen">
-    <div class="icon-lg">❌</div>
+    <div class="error-icon">❌</div>
     <h2>Ошибка</h2>
-    <p id="error-text">Не удалось отправить данные.</p>
-    <button class="btn btn-back" onclick="location.reload()">Попробовать снова</button>
+    <p id="error-text">Что-то пошло не так</p>
+    <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:#ccc; border:none; border-radius:8px;">Попробовать снова</button>
 </div>
 
 <script>
+    // === ВСТАВЬТЕ СЮДА ВАШ НОВЫЙ URL СКРИПТА ===
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0R1nGaZXIkJ37CBd14bitLZQOpnKmMIBjvSZe4UU1A_kQX9CGfnaCCm2P6eyRdvt5/exec"; 
+
     const tg = window.Telegram.WebApp;
-    tg.expand(); 
+    tg.expand();
 
-    // !!! ВАЖНО: ВСТАВЬТЕ СЮДА НОВУЮ ССЫЛКУ ПОСЛЕ ДЕПЛОЯ (NEW VERSION) !!!
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTx1AjbFRS0OekI7IgL4jM5MI324-JWbxO2gP-yVE59dpixAAWBWUZyr0W86MaUIgE/exec"; 
-
-    // Данные для полей
+    // Ключи должны совпадать со скриптом!
     const CONFIG = {
-        1: [
-            { key: "in_controller", label: "Контроллер" },
-            { key: "in_tracker", label: "Трекер" },
-            { key: "in_motor", label: "Мотор-колесо" }
+        1: [ // В ремонт
+            { key: "contr_rem", label: "Контроллер" },
+            { key: "track_rem", label: "Трекер" },
+            { key: "mk_rem",    label: "Мотор-колесо" }
         ],
-        2: [
-            { key: "out_controller", label: "Контроллер" },
-            { key: "out_tracker", label: "Трекер" },
-            { key: "out_motor", label: "Мотор-колесо" }
+        2: [ // Выдано
+            { key: "contr_vyd", label: "Контроллер" },
+            { key: "track_vyd", label: "Трекер" },
+            { key: "mk_vyd",    label: "Мотор-колесо" }
         ],
-        4: [
-            { key: "tires_out", label: "Выдано шин" },
-            { key: "tires_left", label: "Осталось шин" }
+        4: [ // Слесарка
+            { key: "shina_vyd", label: "Выдано шин" },
+            { key: "shina_ost", label: "Осталось шин" }
         ]
     };
 
-    // Старт
-    const dateInput = document.getElementById('report-date');
-    dateInput.valueAsDate = new Date(); // Сегодняшняя дата
+    // Инициализация полей
+    function init() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date-input').value = today;
 
-    function renderItems(pId) {
-        const c = document.getElementById(`list-page-${pId}`);
-        CONFIG[pId].forEach(item => {
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.id = `row-${item.key}`;
-            
-            row.innerHTML = `
-                <button class="item-btn" onclick="toggleItem('${item.key}')">${item.label}</button>
-                <input type="number" id="input-${item.key}" class="qty-input" placeholder="#" min="1" enterkeyhint="done">
-            `;
-            c.appendChild(row);
-
-            // Обработка фокуса
-            const inp = row.querySelector('input');
-            inp.addEventListener('blur', () => { if(!inp.value) toggleItem(item.key); });
+        [1, 2, 4].forEach(pageId => {
+            const container = document.getElementById(`list-${pageId}`);
+            CONFIG[pageId].forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.id = `row-${item.key}`;
+                div.innerHTML = `
+                    <div class="label">${item.label}</div>
+                    <button class="action-btn" id="btn-${item.key}" onclick="toggleItem('${item.key}')">+</button>
+                    <input type="number" id="input-${item.key}" placeholder="0" min="1">
+                `;
+                container.appendChild(div);
+            });
         });
     }
 
-    // Рендерим все страницы
-    [1, 2, 4].forEach(renderItems);
+    init();
 
     function toggleItem(key) {
         const row = document.getElementById(`row-${key}`);
-        const btn = row.querySelector('.item-btn');
+        const btn = document.getElementById(`btn-${key}`);
         const input = document.getElementById(`input-${key}`);
-        const isActive = row.classList.contains('active');
-
-        if (isActive) {
+        
+        if (row.classList.contains('active')) {
             row.classList.remove('active');
             btn.classList.remove('active');
+            btn.innerText = "+";
             input.value = "";
         } else {
             row.classList.add('active');
             btn.classList.add('active');
+            btn.innerText = "✓";
             input.value = "1";
             input.focus();
         }
         if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
     }
 
-    function goToPage(n) {
+    function goToPage(n) { // Простая навигация
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        
         document.getElementById(`page-${n}`).classList.add('active');
-        window.scrollTo(0,0);
+        document.getElementById(`nav-${n}`).classList.add('active');
+        
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
     function sendData() {
-        const rawDate = dateInput.value;
-        if (!rawDate) { alert("Выберите дату!"); return; }
+        const rawDate = document.getElementById('date-input').value;
+        if (!rawDate) { tg.showAlert("Выберите дату!"); return; }
 
-        const [y, m, d] = rawDate.split('-');
-        const fDate = `${d}.${m}.${y}`;
-        
+        // Собираем данные
         const data = {};
+        let hasData = false;
+
         [1, 2, 4].forEach(p => {
             CONFIG[p].forEach(i => {
                 const val = document.getElementById(`input-${i.key}`).value;
-                if (val) data[i.key] = parseInt(val);
+                if (val && parseInt(val) > 0) {
+                    data[i.key] = parseInt(val);
+                    hasData = true;
+                }
             });
         });
 
-        const user = tg.initDataUnsafe.user || { first_name: "Неизвестный", id: 0 };
-        let uName = user.first_name;
+        if (!hasData) { tg.showAlert("Вы ничего не заполнили!"); return; }
+
+        const user = tg.initDataUnsafe.user || { first_name: "Test", id: 0 };
+        let uName = user.first_name || "Anon";
         if (user.last_name) uName += " " + user.last_name;
         if (user.username) uName += " (@" + user.username + ")";
+
+        // Меняем формат даты на человеческий
+        const [y, m, d] = rawDate.split('-');
+        const fDate = `${d}.${m}.${y}`;
 
         const payload = {
             date: fDate,
@@ -193,27 +204,27 @@
             username: uName
         };
 
+        // UI
         document.getElementById('app').style.display = 'none';
-        document.getElementById('loading').style.display = 'block';
+        document.getElementById('loading').style.display = 'flex';
 
-        // Отправка
         fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // Важно для GAS
+            mode: 'no-cors', 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(() => {
-            // В режиме no-cors мы всегда попадаем сюда, даже если скрипт упал.
-            // Но мы добавили обработку ошибок внутри бота (он напишет если что не так)
+            // В no-cors мы всегда попадаем сюда. 
+            // Реальную ошибку "поймает" GAS и отправит в телеграм.
             setTimeout(() => {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('success-screen').style.display = 'block';
+                document.getElementById('success-screen').style.display = 'flex';
                 if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            }, 1000); // Небольшая задержка для красоты
+            }, 1000);
         }).catch(err => {
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('error-screen').style.display = 'block';
-            document.getElementById('error-text').innerText = err;
+            document.getElementById('error-screen').style.display = 'flex';
+            document.getElementById('error-text').innerText = "Ошибка сети: " + err;
         });
     }
 </script>
