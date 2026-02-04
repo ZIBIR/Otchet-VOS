@@ -6,10 +6,11 @@
 <title>Отчет ВОС</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-    /* CSS оставим прежним для краткости, он был нормальным */
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); margin: 0; padding: 0; }
-    .container { padding: 20px; padding-bottom: 80px; }
-    h2 { text-align: center; margin-bottom: 20px; }
+    .container { padding: 20px; padding-bottom: 90px; }
+    h2, h3, h4 { text-align: center; margin-bottom: 20px; margin-top: 0; }
+    
+    /* Инпуты и списки */
     .date-picker { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; background: var(--tg-theme-secondary-bg-color, #f0f0f0); color: var(--tg-theme-text-color, #000); }
     .item-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 10px; background: var(--tg-theme-secondary-bg-color, #f5f5f5); border-radius: 12px; transition: 0.2s; }
     .item-row.active { border: 2px solid var(--tg-theme-button-color, #2481cc); background: var(--tg-theme-bg-color, #fff); }
@@ -18,13 +19,30 @@
     .action-btn.active { background: var(--tg-theme-button-color, #2481cc); color: #fff; }
     input[type="number"] { width: 60px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-size: 16px; display: none; margin-left: 10px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
     .item-row.active input { display: block; }
+    
+    /* Навигация */
     .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--tg-theme-secondary-bg-color, #eee); display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; z-index: 100; }
     .nav-item { font-size: 12px; display: flex; flex-direction: column; align-items: center; opacity: 0.6; cursor: pointer; }
     .nav-item.active { opacity: 1; color: var(--tg-theme-button-color, #2481cc); font-weight: bold; }
-    .page { display: none; }
-    .page.active { display: block; }
-    #main-btn { margin-top: 30px; width: 100%; padding: 15px; border: none; background: var(--tg-theme-button-color, #2481cc); color: #fff; font-size: 18px; border-radius: 12px; cursor: pointer; }
     
+    /* Страницы */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Buttons */
+    .main-btn { margin-top: 20px; width: 100%; padding: 15px; border: none; background: var(--tg-theme-button-color, #2481cc); color: #fff; font-size: 18px; border-radius: 12px; cursor: pointer; }
+    .sec-btn { background: #999; }
+
+    /* Экран проверки */
+    .summary-box { background: var(--tg-theme-secondary-bg-color, #f9f9f9); padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
+    .summary-group { margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+    .summary-group:last-child { border-bottom: none; }
+    .summary-title { font-weight: bold; color: var(--tg-theme-button-color, #2481cc); margin-bottom: 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;}
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 16px; }
+    .btns-row { display: flex; gap: 10px; }
+    .btns-row button { flex: 1; }
+
     /* Экраны загрузки и успеха */
     #loading, #success-screen, #error-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--tg-theme-bg-color, #fff); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--tg-theme-button-color, #3498db); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
@@ -37,8 +55,10 @@
 
 <div id="app">
     <div class="container">
-        <!-- Ввод даты -->
-        <input type="date" id="date-input" class="date-picker">
+        <!-- Ввод даты (виден только на страницах редактирования) -->
+        <div id="date-container">
+            <input type="date" id="date-input" class="date-picker">
+        </div>
 
         <!-- Стр 1: В ремонт -->
         <div id="page-1" class="page active">
@@ -57,12 +77,28 @@
             <h2>Слесарка / Шины</h2>
             <div id="list-4"></div>
         </div>
+        
+        <!-- Кнопка перехода к проверке -->
+        <button id="pre-send-btn" class="main-btn" onclick="goToConfirmation()">Перейти к проверке</button>
 
-        <button id="main-btn" onclick="sendData()">Отправить отчет</button>
+        <!-- СТРАНИЦА ПРОВЕРКИ (изначально скрыта) -->
+        <div id="page-confirm" class="page">
+            <h3>Проверка данных</h3>
+            <p style="text-align:center; opacity:0.7" id="confirm-date-text"></p>
+            
+            <div id="summary-content" class="summary-box">
+                <!-- Сюда JS вставит данные -->
+            </div>
+
+            <div class="btns-row">
+                <button class="main-btn sec-btn" onclick="backToEdit()">Назад</button>
+                <button class="main-btn" onclick="submitFinal()">Подтвердить</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Навигация -->
-    <div class="nav-bar">
+    <!-- Навигация (скрывается на этапе проверки) -->
+    <div class="nav-bar" id="nav-bar">
         <div class="nav-item active" onclick="goToPage(1)" id="nav-1"><span>🛠 В ремонт</span></div>
         <div class="nav-item" onclick="goToPage(2)" id="nav-2"><span>📦 Выдано</span></div>
         <div class="nav-item" onclick="goToPage(4)" id="nav-4"><span>⚙️ Слесарка</span></div>
@@ -92,13 +128,19 @@
 </div>
 
 <script>
-    // === ВСТАВЬТЕ СЮДА ВАШ НОВЫЙ URL СКРИПТА ===
+    // === URL ВАШЕГО СКРИПТА ===
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz0R1nGaZXIkJ37CBd14bitLZQOpnKmMIBjvSZe4UU1A_kQX9CGfnaCCm2P6eyRdvt5/exec"; 
 
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Ключи должны совпадать со скриптом!
+    // Названия групп для красивого вывода
+    const GR_NAMES = {
+        1: "Пришло в ремонт",
+        2: "Выдано (готовое)",
+        4: "Слесарка"
+    };
+
     const CONFIG = {
         1: [ // В ремонт
             { key: "contr_rem", label: "Контроллер" },
@@ -116,13 +158,17 @@
         ]
     };
 
-    // Инициализация полей
+    // Запоминаем текущую страницу, чтобы кнопка "Назад" возвращала, куда надо
+    let lastActivePage = 1;
+
     function init() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date-input').value = today;
 
         [1, 2, 4].forEach(pageId => {
             const container = document.getElementById(`list-${pageId}`);
+            if(!container) return; 
+            
             CONFIG[pageId].forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'item-row';
@@ -159,44 +205,105 @@
         if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
     }
 
-    function goToPage(n) { // Простая навигация
+    function goToPage(n) {
+        // Скрываем все страницы
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         
+        // Показываем нужную
         document.getElementById(`page-${n}`).classList.add('active');
-        document.getElementById(`nav-${n}`).classList.add('active');
+        const navBtn = document.getElementById(`nav-${n}`);
+        if(navBtn) navBtn.classList.add('active');
         
+        lastActivePage = n; // Запоминаем
+        
+        // Возвращаем видимость кнопки и даты, если вернулись с подтверждения
+        document.getElementById('nav-bar').style.display = 'flex';
+        document.getElementById('pre-send-btn').style.display = 'block';
+        document.getElementById('date-container').style.display = 'block';
+
         if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     }
 
-    function sendData() {
+    // --- ЛОГИКА ПРОВЕРКИ ---
+
+    function goToConfirmation() {
         const rawDate = document.getElementById('date-input').value;
         if (!rawDate) { tg.showAlert("Выберите дату!"); return; }
 
-        // Собираем данные
-        const data = {};
+        // Собираем HTML для сводки
+        let summaryHtml = "";
         let hasData = false;
 
+        [1, 2, 4].forEach(p => {
+            let groupHtml = "";
+            CONFIG[p].forEach(i => {
+                const val = document.getElementById(`input-${i.key}`).value;
+                if (val && parseInt(val) > 0) {
+                    groupHtml += `
+                        <div class="summary-row">
+                            <span>${i.label}</span>
+                            <b>${val}</b>
+                        </div>
+                    `;
+                    hasData = true;
+                }
+            });
+
+            if (groupHtml !== "") {
+                summaryHtml += `
+                    <div class="summary-group">
+                        <div class="summary-title">${GR_NAMES[p]}</div>
+                        ${groupHtml}
+                    </div>
+                `;
+            }
+        });
+
+        if (!hasData) { tg.showAlert("Вы ничего не заполнили!"); return; }
+
+        // Заполняем экран проверки
+        document.getElementById('summary-content').innerHTML = summaryHtml;
+        document.getElementById('confirm-date-text').innerText = "Дата отчета: " + rawDate.split('-').reverse().join('.');
+
+        // Переключаем вид
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-confirm').classList.add('active');
+
+        // Скрываем лишние элементы UI
+        document.getElementById('nav-bar').style.display = 'none';
+        document.getElementById('pre-send-btn').style.display = 'none';
+        document.getElementById('date-container').style.display = 'none';
+        
+        if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function backToEdit() {
+        goToPage(lastActivePage);
+    }
+
+    // --- ОТПРАВКА ---
+
+    function submitFinal() {
+        const rawDate = document.getElementById('date-input').value;
+        const [y, m, d] = rawDate.split('-');
+        const fDate = `${d}.${m}.${y}`;
+
+        // Снова собираем объект данных (надежнее, чем передавать)
+        const data = {};
         [1, 2, 4].forEach(p => {
             CONFIG[p].forEach(i => {
                 const val = document.getElementById(`input-${i.key}`).value;
                 if (val && parseInt(val) > 0) {
                     data[i.key] = parseInt(val);
-                    hasData = true;
                 }
             });
         });
-
-        if (!hasData) { tg.showAlert("Вы ничего не заполнили!"); return; }
 
         const user = tg.initDataUnsafe.user || { first_name: "Test", id: 0 };
         let uName = user.first_name || "Anon";
         if (user.last_name) uName += " " + user.last_name;
         if (user.username) uName += " (@" + user.username + ")";
-
-        // Меняем формат даты на человеческий
-        const [y, m, d] = rawDate.split('-');
-        const fDate = `${d}.${m}.${y}`;
 
         const payload = {
             date: fDate,
@@ -214,8 +321,6 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(() => {
-            // В no-cors мы всегда попадаем сюда. 
-            // Реальную ошибку "поймает" GAS и отправит в телеграм.
             setTimeout(() => {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('success-screen').style.display = 'flex';
